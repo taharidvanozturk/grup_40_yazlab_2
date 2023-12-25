@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations
+// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +38,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  String _selectedNumber = 'Ders Seçiniz';
-  String _selectedDay = 'Gün Seçiniz';
-
-  String _selectedHour = 'Saat Seçiniz';
+  final String _selectedNumber = 'Ders Seçiniz';
+  final String _selectedDay = 'Gün Seçiniz';
+  final String _selectedHour = 'Saat Seçiniz';
 
   void _incrementCounter() {
     setState(() {
@@ -181,6 +180,9 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   String _selectedTeacher = 'Öğretmen Seçiniz';
   String _selectedHour = 'Saat Seçiniz';
 
+  var _selectedNumber;
+  var _selectedDay;
+
   void _saveLessonData(BuildContext context) async {
     String lessonName = _dersAdiController.text;
     String className = _sinifController.text;
@@ -296,7 +298,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                   }
                 },
               ),
-              FutureBuilder<List<String>>(
+              FutureBuilder<List<Map<String, String>>>(
                 future: _getHoursFromGridCollection(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -304,47 +306,41 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else if (snapshot.hasData && snapshot.data != null) {
-                    List<String> lessonInfos = snapshot.data!;
+                    List<Map<String, String>> lessonInfos = snapshot.data!;
 
-                    // Ayırma işlemi
-                    List<String> lessonNumbers = [];
-                    List<String> lessonHours = [];
-                    List<String> lessonDays = [];
+                    List<String> uniqueNumbers = [];
+                    List<String> uniqueDays = [];
 
+                    // Extract unique "text" values for hours and days
                     for (var lessonInfo in lessonInfos) {
-                      List<String> parts =
-                          lessonInfo.split('. '); // Örnek: "1. Ders 08:00"
-                      lessonNumbers.add(parts[0]);
-                      lessonHours.add(parts[0].split(' ')[0]);
-                      // Ders günlerini ayırmak için gerekirse:
-                      List<String> days = parts[0]
-                          .split(' '); // Eğer günler boşlukla ayrılmışsa
-                      lessonDays.add(days.first);
-                    }
+                      String id = lessonInfo['id']!;
+                      String text = lessonInfo['text']!;
 
-                    // Remove duplicates
-                    List<String> uniqueNumbers = lessonNumbers.toSet().toList();
-                    List<String> uniqueHours = lessonHours.toSet().toList();
-                    // Ders günleri varsa:
-                    List<String> uniqueDays = lessonDays.toSet().toList();
-
-                    // Check if the initially selected values are in the lists; if not, set them to the first items
-                    Object? _selectedNumber;
-                    if (!uniqueNumbers.contains(_selectedNumber)) {
-                      _selectedNumber = uniqueNumbers.isNotEmpty
-                          ? uniqueNumbers[0]
-                          : 'Ders Seçiniz';
-                    }
-                    if (!uniqueHours.contains(_selectedHour)) {
-                      _selectedHour = uniqueHours.isNotEmpty
-                          ? uniqueHours[0]
-                          : 'Saat Seçiniz';
-                    }
-                    // Eğer günler de varsa:
-                    Object? _selectedDay;
-                    if (!uniqueDays.contains(_selectedDay)) {
-                      _selectedDay =
-                          uniqueDays.isNotEmpty ? uniqueDays[0] : 'Gün Seçiniz';
+                      if (id.startsWith('1x1') ||
+                          id.startsWith('2x1') ||
+                          id.startsWith('3x1') ||
+                          id.startsWith('4x1') ||
+                          id.startsWith('5x1') ||
+                          id.startsWith('6x1') ||
+                          id.startsWith('7x1') ||
+                          id.startsWith('8x1') ||
+                          id.startsWith('9x1') ||
+                          id.startsWith('10x1') ||
+                          id.startsWith('11x1') ||
+                          id.startsWith('12x1') ||
+                          id.startsWith('13x1') ||
+                          id.startsWith('14x1') ||
+                          id.startsWith('15x1') ||
+                          id.startsWith('16x1')) {
+                        uniqueNumbers.add(text);
+                      } else if (id.startsWith('1x2') ||
+                          id.startsWith('1x3') ||
+                          id.startsWith('1x4') ||
+                          id.startsWith('1x5') ||
+                          id.startsWith('1x6') ||
+                          id.startsWith('1x7')) {
+                        uniqueDays.add(text);
+                      }
                     }
 
                     return Column(
@@ -352,7 +348,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                         DropdownButtonFormField<Object>(
                           value: _selectedNumber,
                           items: uniqueNumbers.map((number) {
-                            return DropdownMenuItem<String>(
+                            return DropdownMenuItem<Object>(
                               value: number,
                               child: Text('$number'),
                             );
@@ -368,7 +364,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                         DropdownButtonFormField<Object>(
                           value: _selectedDay,
                           items: uniqueDays.map((day) {
-                            return DropdownMenuItem<String>(
+                            return DropdownMenuItem<Object>(
                               value: day,
                               child: Text(day),
                             );
@@ -404,12 +400,12 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
     );
   }
 
-  Future<List<String>> _getHoursFromGridCollection() async {
+  Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('grid').get();
     return querySnapshot.docs
-        .map((doc) => doc['text'] as String)
-        .toSet()
+        .map(
+            (doc) => {'id': doc['id'] as String, 'text': doc['text'] as String})
         .toList();
   }
 }
