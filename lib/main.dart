@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously
+// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +38,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  String _selectedNumber = 'Ders Seçiniz';
+  String _selectedDay = 'Gün Seçiniz';
+
+  String _selectedHour = 'Saat Seçiniz';
 
   void _incrementCounter() {
     setState(() {
@@ -58,7 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const DersEklemeSayfasi()),
+                  builder: (context) => const DersEklemeSayfasi(),
+                ),
               );
             },
           ),
@@ -68,7 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const OgretmenEklemeSayfasi()),
+                  builder: (context) => const OgretmenEklemeSayfasi(),
+                ),
               );
             },
           ),
@@ -160,8 +166,67 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class DersEklemeSayfasi extends StatelessWidget {
+class DersEklemeSayfasi extends StatefulWidget {
   const DersEklemeSayfasi({Key? key}) : super(key: key);
+
+  @override
+  _DersEklemeSayfasiState createState() => _DersEklemeSayfasiState();
+}
+
+class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _dersAdiController = TextEditingController();
+  final TextEditingController _sinifController = TextEditingController();
+  final TextEditingController _saatController = TextEditingController();
+  String _selectedTeacher = 'Öğretmen Seçiniz';
+  String _selectedHour = 'Saat Seçiniz';
+
+  void _saveLessonData(BuildContext context) async {
+    String lessonName = _dersAdiController.text;
+    String className = _sinifController.text;
+    String lessonHour = _saatController.text;
+    String teacherName = _selectedTeacher;
+
+    // Ders veritabanındaki dersler koleksiyonuna ekleniyor.
+    await FirebaseFirestore.instance.collection('lessons').add({
+      'lessonName': lessonName,
+      'className': className,
+      'lessonHour': lessonHour,
+      'teacherName': teacherName,
+    });
+
+    // Başarı mesajını göster
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Ders başarıyla eklendi.'),
+      ),
+    );
+
+    // Form alanlarını temizle
+    _dersAdiController.clear();
+    _sinifController.clear();
+    _saatController.clear();
+    setState(() {
+      _selectedTeacher = 'Öğretmen Seçiniz';
+      _selectedHour = 'Saat Seçiniz';
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTeacherNames();
+  }
+
+  Future<void> _loadTeacherNames() async {
+    // Load teacher names and set initial value for _selectedTeacher
+    List<String> teacherNames = await _getTeacherNames();
+    if (teacherNames.isNotEmpty) {
+      setState(() {
+        _selectedTeacher = teacherNames[0];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,11 +234,193 @@ class DersEklemeSayfasi extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Ders Ekleme Sayfası'),
       ),
-      body: const Center(
-        child: Text('Bu sayfa ders ekleme sayfasıdır.'),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _dersAdiController,
+                decoration: const InputDecoration(labelText: 'Ders Adı'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Ders adı boş olamaz';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _sinifController,
+                decoration: const InputDecoration(labelText: 'Sınıf'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Sınıf boş olamaz';
+                  }
+                  return null;
+                },
+              ),
+              FutureBuilder<List<String>>(
+                future: _getTeacherNames(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    List<String> teacherNames = snapshot.data!;
+
+                    if (!teacherNames.contains(_selectedTeacher)) {
+                      _selectedTeacher = teacherNames.isNotEmpty
+                          ? teacherNames[0]
+                          : 'Öğretmen Seçiniz';
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      value: _selectedTeacher,
+                      items: teacherNames.map((teacher) {
+                        return DropdownMenuItem<String>(
+                          value: teacher,
+                          child: Text(teacher),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedTeacher = value!;
+                        });
+                      },
+                      decoration: const InputDecoration(labelText: 'Öğretmen'),
+                    );
+                  } else {
+                    return const Text('No teachers available.');
+                  }
+                },
+              ),
+              FutureBuilder<List<String>>(
+                future: _getHoursFromGridCollection(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    List<String> lessonInfos = snapshot.data!;
+
+                    // Ayırma işlemi
+                    List<String> lessonNumbers = [];
+                    List<String> lessonHours = [];
+                    List<String> lessonDays = [];
+
+                    for (var lessonInfo in lessonInfos) {
+                      List<String> parts =
+                          lessonInfo.split('. '); // Örnek: "1. Ders 08:00"
+                      lessonNumbers.add(parts[0]);
+                      lessonHours.add(parts[0].split(' ')[0]);
+                      // Ders günlerini ayırmak için gerekirse:
+                      List<String> days = parts[0]
+                          .split(' '); // Eğer günler boşlukla ayrılmışsa
+                      lessonDays.add(days.first);
+                    }
+
+                    // Remove duplicates
+                    List<String> uniqueNumbers = lessonNumbers.toSet().toList();
+                    List<String> uniqueHours = lessonHours.toSet().toList();
+                    // Ders günleri varsa:
+                    List<String> uniqueDays = lessonDays.toSet().toList();
+
+                    // Check if the initially selected values are in the lists; if not, set them to the first items
+                    Object? _selectedNumber;
+                    if (!uniqueNumbers.contains(_selectedNumber)) {
+                      _selectedNumber = uniqueNumbers.isNotEmpty
+                          ? uniqueNumbers[0]
+                          : 'Ders Seçiniz';
+                    }
+                    if (!uniqueHours.contains(_selectedHour)) {
+                      _selectedHour = uniqueHours.isNotEmpty
+                          ? uniqueHours[0]
+                          : 'Saat Seçiniz';
+                    }
+                    // Eğer günler de varsa:
+                    Object? _selectedDay;
+                    if (!uniqueDays.contains(_selectedDay)) {
+                      _selectedDay =
+                          uniqueDays.isNotEmpty ? uniqueDays[0] : 'Gün Seçiniz';
+                    }
+
+                    return Column(
+                      children: [
+                        DropdownButtonFormField<Object>(
+                          value: _selectedNumber,
+                          items: uniqueNumbers.map((number) {
+                            return DropdownMenuItem<String>(
+                              value: number,
+                              child: Text('$number'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedNumber = value!;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                              labelText: 'Ders Saati Seçiniz'),
+                        ),
+                        DropdownButtonFormField<Object>(
+                          value: _selectedDay,
+                          items: uniqueDays.map((day) {
+                            return DropdownMenuItem<String>(
+                              value: day,
+                              child: Text(day),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedDay = value!;
+                            });
+                          },
+                          decoration:
+                              const InputDecoration(labelText: 'Gün Seçiniz'),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return const Text('No lessons available.');
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _saveLessonData(context);
+                  }
+                },
+                child: const Text('Kaydet'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  Future<List<String>> _getHoursFromGridCollection() async {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('grid').get();
+    return querySnapshot.docs
+        .map((doc) => doc['text'] as String)
+        .toSet()
+        .toList();
+  }
+}
+
+Future<List<String>> _getTeacherNames() async {
+  // Firestore'dan öğretmen adlarını çek
+  var querySnapshot =
+      await FirebaseFirestore.instance.collection('teachers').get();
+  return querySnapshot.docs
+      .map((doc) => '${doc['unvan']} ${doc['ad']} ${doc['soyad']}')
+      .toList();
 }
 
 class OgretmenEklemeSayfasi extends StatefulWidget {
@@ -188,30 +435,6 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
   final TextEditingController _unvanController = TextEditingController();
   final TextEditingController _adController = TextEditingController();
   final TextEditingController _soyadController = TextEditingController();
-  String _selectedDay = 'Pazartesi';
-  String _selectedHour = '09:00';
-
-  final List<String> _days = [
-    'Pazartesi',
-    'Salı',
-    'Çarşamba',
-    'Perşembe',
-    'Cuma',
-    'Cumartesi',
-    'Pazar',
-  ];
-
-  final List<String> _hours = [
-    '09:00',
-    '10:00',
-    '11:00',
-    '12:00',
-    '13:00',
-    '14:00',
-    '15:00',
-    '16:00',
-    '17:00',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -242,6 +465,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
                   if (value == null || value.isEmpty) {
                     return 'Ad boş olamaz';
                   }
+
                   return null;
                 },
               ),
@@ -254,36 +478,6 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
                   }
                   return null;
                 },
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedDay,
-                items: _days.map((String day) {
-                  return DropdownMenuItem<String>(
-                    value: day,
-                    child: Text(day),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedDay = value!;
-                  });
-                },
-                decoration: const InputDecoration(labelText: 'Gün'),
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedHour,
-                items: _hours.map((String hour) {
-                  return DropdownMenuItem<String>(
-                    value: hour,
-                    child: Text(hour),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedHour = value!;
-                  });
-                },
-                decoration: const InputDecoration(labelText: 'Saat'),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -304,7 +498,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
   void _saveTeacherData(BuildContext context) async {
     String fullName =
         '${_unvanController.text} ${_adController.text} ${_soyadController.text}';
-    String documentId = '$fullName-$_selectedDay-$_selectedHour';
+    String documentId = '$fullName';
 
     // Check if the document already exists
     var existingDoc = await FirebaseFirestore.instance
@@ -316,7 +510,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
       // Document already exists, show an error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bu öğretmen zaten bu gün ve saatte ders vermektedir.'),
+          content: Text('Bu öğretmen zaten ekli.'),
         ),
       );
     } else {
@@ -328,8 +522,6 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
         'unvan': _unvanController.text,
         'ad': _adController.text,
         'soyad': _soyadController.text,
-        'day': _selectedDay,
-        'hour': _selectedHour,
       });
 
       // Show success message
