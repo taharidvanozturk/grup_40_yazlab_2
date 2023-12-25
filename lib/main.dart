@@ -1,9 +1,14 @@
-// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api
+// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api, prefer_final_fields
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
+
+String _selectedHour = 'Saat Seçiniz';
+int _counter = 0;
+String _selectedNumber = 'Ders Saati Seçiniz';
+String _selectedTeacher = 'Öğretmen Seçiniz';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,17 +42,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  final String _selectedNumber = 'Ders Seçiniz';
-  final String _selectedDay = 'Gün Seçiniz';
-  final String _selectedHour = 'Saat Seçiniz';
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,11 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -153,14 +142,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Color? _parseColor(String? colorString) {
     if (colorString == null || colorString.isEmpty) {
-      return null;
+      return Colors.grey; // Provide a default color
     }
 
     try {
       return Color(int.parse(colorString, radix: 16));
     } catch (e) {
       print('Error parsing color: $e');
-      return null;
+      return Colors.grey; // Provide a default color
     }
   }
 }
@@ -177,41 +166,64 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   final TextEditingController _dersAdiController = TextEditingController();
   final TextEditingController _sinifController = TextEditingController();
   final TextEditingController _saatController = TextEditingController();
-  String _selectedTeacher = 'Öğretmen Seçiniz';
-  String _selectedHour = 'Saat Seçiniz';
+  String? _selectedDay;
+  String _selectedClass = 'Sınıf Seçiniz';
 
-  var _selectedNumber;
-  var _selectedDay;
+  Future<List<String>> _getClasses() async {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('classes').get();
+    return querySnapshot.docs.map((doc) => doc['name'] as String).toList();
+  }
 
-  void _saveLessonData(BuildContext context) async {
+  Future<void> _saveLessonData(BuildContext context) async {
     String lessonName = _dersAdiController.text;
-    String className = _sinifController.text;
-    String lessonHour = _saatController.text;
+    String lessonHour = _selectedHour;
     String teacherName = _selectedTeacher;
+    String lessonDay = _selectedDay ?? 'Gün Seçiniz'; // Default value for day
+    String className = _selectedClass;
 
-    // Ders veritabanındaki dersler koleksiyonuna ekleniyor.
-    await FirebaseFirestore.instance.collection('lessons').add({
-      'lessonName': lessonName,
-      'className': className,
-      'lessonHour': lessonHour,
-      'teacherName': teacherName,
-    });
+    // Check if the teacher already has a lesson at the same time, day, and class
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('lessons')
+        .where('lessonHour', isEqualTo: lessonHour)
+        .where('lessonDay', isEqualTo: lessonDay)
+        .where('teacherName', isEqualTo: teacherName)
+        .where('className', isEqualTo: className)
+        .get();
 
-    // Başarı mesajını göster
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Ders başarıyla eklendi.'),
-      ),
-    );
+    if (querySnapshot.docs.isNotEmpty) {
+      // Teacher already has a lesson at this time, day, and class, show an error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'The teacher already has a lesson at this time, day, and class.'),
+        ),
+      );
+    } else {
+      // No conflicting lessons found, proceed to save the new lesson
+      await FirebaseFirestore.instance.collection('lessons').add({
+        'lessonName': lessonName,
+        'className': className,
+        'lessonHour': _selectedHour,
+        'lessonDay': lessonDay, // Save the day
+        'teacherName': teacherName,
+      });
 
-    // Form alanlarını temizle
-    _dersAdiController.clear();
-    _sinifController.clear();
-    _saatController.clear();
-    setState(() {
-      _selectedTeacher = 'Öğretmen Seçiniz';
-      _selectedHour = 'Saat Seçiniz';
-    });
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lesson successfully added.'),
+        ),
+      );
+
+      // Clear form fields
+      _dersAdiController.clear();
+      _saatController.clear();
+      setState(() {
+        _selectedTeacher = 'Öğretmen Seçiniz';
+        _selectedClass = 'Sınıf Seçiniz';
+      });
+    }
   }
 
   @override
@@ -252,16 +264,6 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _sinifController,
-                decoration: const InputDecoration(labelText: 'Sınıf'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Sınıf boş olamaz';
-                  }
-                  return null;
-                },
-              ),
               FutureBuilder<List<String>>(
                 future: _getTeacherNames(),
                 builder: (context, snapshot) {
@@ -295,6 +297,42 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                     );
                   } else {
                     return const Text('No teachers available.');
+                  }
+                },
+              ),
+              FutureBuilder<List<String>>(
+                future: _getClasses(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    List<String> classNames = snapshot.data!;
+
+                    if (!classNames.contains(_selectedClass)) {
+                      _selectedClass = classNames.isNotEmpty
+                          ? classNames[0]
+                          : 'Sınıf Seçiniz';
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      value: _selectedClass,
+                      items: classNames.map((className) {
+                        return DropdownMenuItem<String>(
+                          value: className,
+                          child: Text(className),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedClass = value!;
+                        });
+                      },
+                      decoration: const InputDecoration(labelText: 'Sınıf'),
+                    );
+                  } else {
+                    return const Text('No classes available.');
                   }
                 },
               ),
@@ -343,30 +381,53 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       }
                     }
 
+                    if (_selectedDay == null ||
+                        !uniqueDays.contains(_selectedDay!)) {
+                      _selectedDay =
+                          uniqueDays.isNotEmpty ? uniqueDays[0] : null;
+                    }
+
+                    print(_selectedNumber);
+
                     return Column(
                       children: [
-                        DropdownButtonFormField<Object>(
-                          value: _selectedNumber,
-                          items: uniqueNumbers.map((number) {
-                            return DropdownMenuItem<Object>(
-                              value: number,
-                              child: Text('$number'),
-                            );
-                          }).toList(),
+                        DropdownButtonFormField<String>(
+                          value: _selectedNumber ?? 'Ders Saati Seçiniz',
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: 'Ders Saati Seçiniz',
+                              child: Text('Ders Saati Seçiniz'),
+                            ),
+                            ...Set.from(uniqueNumbers).map((number) {
+                              if (number == 'Ders Saati Seçiniz') {
+                                return DropdownMenuItem<String>(
+                                  value: number,
+                                  child: Text('$number'),
+                                );
+                              }
+                              return DropdownMenuItem<String>(
+                                value: number,
+                                child: Text('$number'),
+                              );
+                            }).toList(),
+                          ],
                           onChanged: (value) {
                             setState(() {
                               _selectedNumber = value!;
+                              _selectedHour =
+                                  value!; // Update _selectedHour along with _selectedNumber
                             });
                           },
                           decoration: const InputDecoration(
-                              labelText: 'Ders Saati Seçiniz'),
+                            labelText: 'Ders Saati Seçiniz',
+                          ),
                         ),
-                        DropdownButtonFormField<Object>(
-                          value: _selectedDay,
+                        DropdownButtonFormField<String>(
+                          value: _selectedDay ?? 'Gün Seçiniz',
                           items: uniqueDays.map((day) {
-                            return DropdownMenuItem<Object>(
+                            return DropdownMenuItem<String>(
                               value: day,
-                              child: Text(day),
+                              child: Text('$day'),
                             );
                           }).toList(),
                           onChanged: (value) {
