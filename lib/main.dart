@@ -16,7 +16,10 @@ Future<List<String>> _getTeacherNames() async {
 Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
   var querySnapshot = await FirebaseFirestore.instance.collection('grid').get();
   return querySnapshot.docs
-      .map((doc) => {'id': doc['id'] as String, 'text': doc['text'] as String})
+      .map((doc) => {
+            'id': doc['id'].toString(),
+            'text': doc['text'].toString(),
+          })
       .toList();
 }
 
@@ -96,10 +99,10 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: const Icon(Icons.delete),
             onPressed: () {
               Navigator.push(
-              context,
-              MaterialPageRoute(
-              builder: (context) => const OgretmenEklemeSayfasi(),
-              ),
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ManageDataPage(),
+                ),
               );
             },
           ),
@@ -139,7 +142,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           } else {
-            return const Text('Sınıf bilgileri bulunamadı veya kayıtlı sınıf yok.');
+            return const Text(
+                'Sınıf bilgileri bulunamadı veya kayıtlı sınıf yok.');
           }
         },
       ),
@@ -429,7 +433,8 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       ],
                     );
                   } else {
-                    return const Text('Ders bilgileri bulunamadı veya kayıtlı ders yok.');
+                    return const Text(
+                        'Ders bilgileri bulunamadı veya kayıtlı ders yok.');
                   }
                 },
               ),
@@ -565,6 +570,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
     }
   }
 }
+
 class ClassSchedulePage extends StatelessWidget {
   final String className;
 
@@ -609,7 +615,8 @@ class ClassSchedulePage extends StatelessWidget {
               },
             );
           } else {
-            return const Text('Ders bilgileri bulunamadı veya kayıtlı ders yok.');
+            return const Text(
+                'Ders bilgileri bulunamadı veya kayıtlı ders yok.');
           }
         },
       ),
@@ -617,3 +624,221 @@ class ClassSchedulePage extends StatelessWidget {
   }
 }
 
+class ManageDataPage extends StatefulWidget {
+  const ManageDataPage({Key? key}) : super(key: key);
+
+  @override
+  _ManageDataPageState createState() => _ManageDataPageState();
+}
+
+class _ManageDataPageState extends State<ManageDataPage> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, String>> _dataList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLessonsData();
+  }
+
+  List<Map<String, String>> _lessonsList = [];
+List<Map<String, String>> _teachersList = [];
+List<Map<String, String>> _classesList = [];
+
+Future<void> _loadLessonsData() async {
+  try {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('lessons').get();
+    setState(() {
+      _lessonsList = querySnapshot.docs.map((doc) {
+        var data = doc.data();
+        return {
+          'id': doc.id,
+          'info':
+              '${data['lessonName']}, ${data['teacherName']}, ${data['className']}, ${data['lessonDay']}, ${data['lessonHour']}',
+        };
+      }).toList();
+      _mergeDataLists();
+    });
+  } catch (e) {
+    print('Error loading lessons data: $e');
+  }
+}
+
+Future<void> _loadTeachersData() async {
+  try {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('teachers').get();
+    setState(() {
+      _teachersList = querySnapshot.docs.map((doc) {
+        var data = doc.data();
+        return {
+          'id': doc.id,
+          'info': '${data['unvan']} ${data['ad']} ${data['soyad']}',
+        };
+      }).toList();
+      _mergeDataLists();
+    });
+  } catch (e) {
+    print('Error loading teachers data: $e');
+  }
+}
+
+Future<void> _loadClassesData() async {
+  try {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('classes').get();
+    setState(() {
+      _classesList = querySnapshot.docs.map((doc) {
+        var data = doc.data();
+        return {
+          'id': doc.id,
+          'info': '${data['name']}',
+        };
+      }).toList();
+      _mergeDataLists();
+    });
+  } catch (e) {
+    print('Error loading classes data: $e');
+  }
+}
+
+
+Future<void> _mergeDataLists() async {
+  print('Merging data lists:');
+  print('Lessons: ${_lessonsList.length}');
+  print('Teachers: ${_teachersList.length}');
+  print('Classes: ${_classesList.length}');
+
+  _dataList = [..._lessonsList, ..._teachersList, ..._classesList];
+  print('Merged List: ${_dataList.length}');
+
+  setState(() {
+    // Update the state after merging lists
+    _dataList = [..._lessonsList, ..._teachersList, ..._classesList];
+  });
+}
+
+
+
+
+  Future<void> _loadDataFromCollection(String collectionName) async {
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection(collectionName).get();
+
+    setState(() {
+      _dataList = querySnapshot.docs
+          .map((doc) => {
+                'id': doc.id,
+                'collectionName': collectionName,
+                ...doc
+                    .data()
+                    .map((key, value) => MapEntry(key, value.toString())),
+              })
+          .toList();
+    });
+  }
+
+  Future<void> _deleteDocument(String collectionName, String documentId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(documentId)
+          .delete();
+
+      // Reload data after deletion
+      await _loadDataFromCollection(collectionName);
+    } catch (e) {
+      print('Error deleting document: $e');
+    }
+  }
+
+  Future<void> _editDocument(String collectionName, String documentId) async {
+    // Implement editing logic here
+    // You may navigate to a new page to edit the document
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Veri Düzenleme Ekranı'),
+      ),
+      body: Column(
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    ElevatedButton(
+      onPressed: _loadLessonsData,
+      child: Text('Dersleri Göster'),
+    ),
+    ElevatedButton(
+      onPressed: _loadTeachersData,
+      child: Text('Öğretmenleri Göster'),
+    ),
+    ElevatedButton(
+      onPressed: _loadClassesData,
+      child: Text('Sınıfları Göster'),
+              ),
+            ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _dataList.length,
+              itemBuilder: (context, index) {
+                var data = _dataList[index];
+                return ListTile(
+                  title: Text(data['info'] ?? ''),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          // Implement edit logic here
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirm Deletion'),
+                                content: const Text(
+                                    'Are you sure you want to delete this data?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('Cancel'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: const Text('Delete'),
+                                    onPressed: () {
+                                      // Call the function to delete the data
+                                      
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
