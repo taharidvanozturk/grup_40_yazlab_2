@@ -650,6 +650,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
       _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
+          'collectionName': 'lessons',
           'id': doc.id,
           'info':
               '${data['lessonName']}, ${data['teacherName']}, ${data['className']}, ${data['lessonDay']}, ${data['lessonHour']}',
@@ -665,6 +666,8 @@ class _ManageDataPageState extends State<ManageDataPage> {
       _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
+          'collectionName': 'teachers',
+          'id': doc.id,
           'info': '${data['unvan']} ${data['ad']} ${data['soyad']}',
         };
       }).toList();
@@ -678,6 +681,8 @@ class _ManageDataPageState extends State<ManageDataPage> {
       _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
+          'collectionName': 'classes',
+          'id': doc.id,
           'info': '${data['name']}',
         };
       }).toList();
@@ -701,14 +706,50 @@ class _ManageDataPageState extends State<ManageDataPage> {
     });
   }
 
-  Future<void> _deleteDocument(String collectionName, String documentId) async {
-    await FirebaseFirestore.instance
-        .collection(collectionName)
-        .doc(documentId)
-        .delete();
+  Future<void> _deleteDocument(List<Map<String, dynamic>> dataList) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Silme Onayı'),
+          content: const Text('Bu veriyi silmek istediğinizden emin misiniz?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Vazgeç'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Sil'),
+              onPressed: () async {
+                // Access the collection name and document ID from the data list
+                var firstData = dataList.isNotEmpty ? dataList.first : {};
+                String collectionName = firstData['collectionName'] ?? '';
+                String documentId = firstData['id'] ?? '';
 
-    // Reload data after deletion
-    await _loadDataFromCollection(collectionName);
+                await FirebaseFirestore.instance
+                    .collection(collectionName)
+                    .doc(documentId)
+                    .delete();
+
+                // Veriyi başarıyla sildiyse, veriyi yeniden yükle
+                await _loadDataFromCollection(collectionName);
+
+                // Silme işlemi başarılı olduysa bilgilendirme göster
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Veri başarıyla silindi.'),
+                  ),
+                );
+
+                Navigator.of(context).pop(); // Onay penceresini kapat
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _editDocument(String collectionName, String documentId) async {
@@ -724,9 +765,10 @@ class _ManageDataPageState extends State<ManageDataPage> {
       ),
       body: Column(
         children: [
-          Row(
+          Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ElevatedButton(
                 onPressed: _loadLessonsData,
@@ -761,36 +803,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Confirm Deletion'),
-                                content: const Text(
-                                    'Are you sure you want to delete this data?'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Cancel'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  TextButton(
-                                    child: const Text('Delete'),
-                                    onPressed: () {
-                                      // Call the function to delete the data
-                                      if (data['collectionName'] != null &&
-                                          data['id'] != null) {
-                                        _deleteDocument(data['collectionName']!,
-                                            data['id']!);
-                                      }
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                          _deleteDocument([_dataList[index]]);
                         },
                       )
                     ],
