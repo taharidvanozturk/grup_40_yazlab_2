@@ -1,9 +1,30 @@
-// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api, prefer_final_fields
+// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api, prefer_final_fields, unused_element, prefer_const_constructors
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
+
+Future<List<String>> _getTeacherNames() async {
+  var querySnapshot =
+      await FirebaseFirestore.instance.collection('teachers').get();
+  return querySnapshot.docs
+      .map((doc) => '${doc['unvan']} ${doc['ad']} ${doc['soyad']}')
+      .toList();
+}
+
+Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
+  var querySnapshot = await FirebaseFirestore.instance.collection('grid').get();
+  return querySnapshot.docs
+      .map((doc) => {'id': doc['id'] as String, 'text': doc['text'] as String})
+      .toList();
+}
+
+Future<List<String>> _getClasses() async {
+  var querySnapshot =
+      await FirebaseFirestore.instance.collection('classes').get();
+  return querySnapshot.docs.map((doc) => doc['name'] as String).toList();
+}
 
 String _selectedHour = 'Saat Seçiniz';
 int _counter = 0;
@@ -22,12 +43,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Grup 40 YazLab 2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Grup 40 YazLab 2'),
     );
   }
 }
@@ -61,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: const Icon(Icons.person_add),
             onPressed: () {
               Navigator.push(
                 context,
@@ -71,86 +92,58 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(
+              builder: (context) => const OgretmenEklemeSayfasi(),
+              ),
+              );
+            },
+          ),
         ],
       ),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7,
-        ),
-        itemCount: 7 * 16,
-        itemBuilder: (context, index) {
-          int row = (index / 7).floor() + 1;
-          int column = (index % 7) + 1;
-          String cellId = '$row' + 'x' + '$column';
-
-          return FutureBuilder<DocumentSnapshot>(
-            future:
-                FirebaseFirestore.instance.collection('grid').doc(cellId).get(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasError) {
-                  print('Error: ${snapshot.error}');
-                  return _buildPlaceholderContainer();
-                }
-
-                if (snapshot.hasData && snapshot.data != null) {
-                  Map<String, dynamic>? data =
-                      snapshot.data!.data() as Map<String, dynamic>?;
-
-                  if (data != null) {
-                    return GestureDetector(
-                      onTap: () {
-                        // Hücreye tıklama işlemleri buraya eklenebilir
-                      },
-                      child: Container(
-                        color: _parseColor(data['color']),
-                        child: Center(
-                          child: Text(
-                            data['text'] ?? 'Placeholder',
-                            style: const TextStyle(color: Colors.black),
+      body: FutureBuilder<List<String>>(
+        future: _getClasses(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData && snapshot.data != null) {
+            List<String> classNames = snapshot.data!;
+            return Center(
+              child: Wrap(
+                spacing: 8.0, // gap between adjacent chips
+                runSpacing: 4.0, // gap between lines
+                children: classNames.map((className) {
+                  return SizedBox(
+                    width: MediaQuery.of(context).size.width /
+                        2, // half of screen width
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ClassSchedulePage(className: className),
                           ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    return _buildPlaceholderContainer();
-                  }
-                } else {
-                  return _buildPlaceholderContainer();
-                }
-              } else {
-                return const CircularProgressIndicator();
-              }
-            },
-          );
+                        );
+                      },
+                      child: Text(className),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          } else {
+            return const Text('Sınıf bilgileri bulunamadı veya kayıtlı sınıf yok.');
+          }
         },
       ),
     );
-  }
-
-  Widget _buildPlaceholderContainer() {
-    return Container(
-      color: Colors.green,
-      child: const Center(
-        child: Text(
-          'No Data',
-          style: TextStyle(color: Colors.black),
-        ),
-      ),
-    );
-  }
-
-  Color? _parseColor(String? colorString) {
-    if (colorString == null || colorString.isEmpty) {
-      return Colors.grey; // Provide a default color
-    }
-
-    try {
-      return Color(int.parse(colorString, radix: 16));
-    } catch (e) {
-      print('Error parsing color: $e');
-      return Colors.grey; // Provide a default color
-    }
   }
 }
 
@@ -168,12 +161,6 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   final TextEditingController _saatController = TextEditingController();
   String? _selectedDay;
   String _selectedClass = 'Sınıf Seçiniz';
-
-  Future<List<String>> _getClasses() async {
-    var querySnapshot =
-        await FirebaseFirestore.instance.collection('classes').get();
-    return querySnapshot.docs.map((doc) => doc['name'] as String).toList();
-  }
 
   Future<void> _saveLessonData(BuildContext context) async {
     String lessonName = _dersAdiController.text;
@@ -196,7 +183,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'The teacher already has a lesson at this time, day, and class.'),
+              'Bu öğretmenin günün aynı saatinde dersi var. Lütfen tekrar deneyin.'),
         ),
       );
     } else {
@@ -212,7 +199,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Lesson successfully added.'),
+          content: Text('Ders Başarıyla Eklendi.'),
         ),
       );
 
@@ -222,6 +209,8 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
       setState(() {
         _selectedTeacher = 'Öğretmen Seçiniz';
         _selectedClass = 'Sınıf Seçiniz';
+        _selectedDay = 'Gün Seçiniz';
+        _selectedHour = 'Ders Saati Seçiniz';
       });
     }
   }
@@ -296,7 +285,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       decoration: const InputDecoration(labelText: 'Öğretmen'),
                     );
                   } else {
-                    return const Text('No teachers available.');
+                    return const Text('Öğretmen bulunamadı.');
                   }
                 },
               ),
@@ -332,7 +321,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       decoration: const InputDecoration(labelText: 'Sınıf'),
                     );
                   } else {
-                    return const Text('No classes available.');
+                    return const Text('Sınıf bulunamadı.');
                   }
                 },
               ),
@@ -414,8 +403,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           onChanged: (value) {
                             setState(() {
                               _selectedNumber = value!;
-                              _selectedHour =
-                                  value!; // Update _selectedHour along with _selectedNumber
+                              _selectedHour = value!;
                             });
                           },
                           decoration: const InputDecoration(
@@ -441,7 +429,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       ],
                     );
                   } else {
-                    return const Text('No lessons available.');
+                    return const Text('Ders bilgileri bulunamadı veya kayıtlı ders yok.');
                   }
                 },
               ),
@@ -460,24 +448,6 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
       ),
     );
   }
-
-  Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
-    var querySnapshot =
-        await FirebaseFirestore.instance.collection('grid').get();
-    return querySnapshot.docs
-        .map(
-            (doc) => {'id': doc['id'] as String, 'text': doc['text'] as String})
-        .toList();
-  }
-}
-
-Future<List<String>> _getTeacherNames() async {
-  // Firestore'dan öğretmen adlarını çek
-  var querySnapshot =
-      await FirebaseFirestore.instance.collection('teachers').get();
-  return querySnapshot.docs
-      .map((doc) => '${doc['unvan']} ${doc['ad']} ${doc['soyad']}')
-      .toList();
 }
 
 class OgretmenEklemeSayfasi extends StatefulWidget {
@@ -595,3 +565,55 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
     }
   }
 }
+class ClassSchedulePage extends StatelessWidget {
+  final String className;
+
+  ClassSchedulePage({required this.className});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$className Sınıfı Haftalık Ders Programı'),
+      ),
+      body: FutureBuilder<QuerySnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('lessons')
+            .where('className', isEqualTo: className)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData && snapshot.data != null) {
+            List<QueryDocumentSnapshot> lessons = snapshot.data!.docs;
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 4.0,
+                mainAxisSpacing: 4.0,
+              ),
+              itemCount: lessons.length,
+              itemBuilder: (context, index) {
+                var lesson = lessons[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(lesson['lessonName']),
+                    subtitle: Text(
+                      '${lesson['lessonDay']}, ${lesson['lessonHour']}, ${lesson['teacherName']}',
+                      maxLines: 2, // Adjust based on your needs
+                    ),
+                  ),
+                );
+              },
+            );
+          } else {
+            return const Text('Ders bilgileri bulunamadı veya kayıtlı ders yok.');
+          }
+        },
+      ),
+    );
+  }
+}
+
