@@ -633,7 +633,7 @@ class ManageDataPage extends StatefulWidget {
 
 class _ManageDataPageState extends State<ManageDataPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> _dataList = [];
+  List<Map<String, dynamic>> _dataList = [];
 
   @override
   void initState() {
@@ -652,11 +652,11 @@ class _ManageDataPageState extends State<ManageDataPage> {
         return {
           'collectionName': 'lessons',
           'id': doc.id,
-          'info':
-              '${data['lessonName']}, ${data['teacherName']}, ${data['className']}, ${data['lessonDay']}, ${data['lessonHour']}',
+          ...data, // Return the entire document data
         };
       }).toList();
     });
+    print(_dataList);
   }
 
   Future<void> _loadTeachersData() async {
@@ -668,10 +668,11 @@ class _ManageDataPageState extends State<ManageDataPage> {
         return {
           'collectionName': 'teachers',
           'id': doc.id,
-          'info': '${data['unvan']} ${data['ad']} ${data['soyad']}',
+          ...data, // Return the entire document data
         };
       }).toList();
     });
+    print(_dataList);
   }
 
   Future<void> _loadClassesData() async {
@@ -680,10 +681,12 @@ class _ManageDataPageState extends State<ManageDataPage> {
     setState(() {
       _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
+        print("Loaded classes data: $data"); // Add this line
         return {
           'collectionName': 'classes',
           'id': doc.id,
           'info': '${data['name']}',
+          ...data, // Include all the document's fields
         };
       }).toList();
     });
@@ -752,9 +755,69 @@ class _ManageDataPageState extends State<ManageDataPage> {
     );
   }
 
-  Future<void> _editDocument(String collectionName, String documentId) async {
-    // Implement editing logic here
-    // You may navigate to a new page to edit the document
+  Future<void> _editDocument(Map<String, dynamic> documentData) async {
+    var existingData = documentData;
+    var editedData = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        // Form initial values
+        var formValues = existingData;
+
+        // Create a TextFormField for each field in the document
+        var formFields = existingData.keys.map((key) {
+          return TextFormField(
+            initialValue: existingData[key],
+            onChanged: (value) => formValues[key] = value,
+            decoration: InputDecoration(labelText: key),
+          );
+        }).toList();
+
+        return AlertDialog(
+          title: Text('Veri Düzenleme'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: formFields,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cancel
+              },
+              child: Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(formValues); // Confirm
+              },
+              child: Text('Onayla'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // If the user confirmed the changes, update the document in the Firestore database
+    if (editedData != null) {
+      // Remove the 'collectionName' and 'id' fields from the editedData map
+      editedData.remove('collectionName');
+      editedData.remove('id');
+
+      await FirebaseFirestore.instance
+          .collection(documentData['collectionName'])
+          .doc(documentData['id'])
+          .update(editedData);
+
+      // Successfully updated message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veri başarıyla güncellendi.'),
+        ),
+      );
+
+      // Reload the data
+      await _loadDataFromCollection(documentData['collectionName']);
+    }
   }
 
   @override
@@ -797,7 +860,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          // Implement edit logic here
+                          _editDocument(_dataList[index]);
                         },
                       ),
                       IconButton(
