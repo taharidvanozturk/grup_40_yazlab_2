@@ -639,18 +639,15 @@ class _ManageDataPageState extends State<ManageDataPage> {
   void initState() {
     super.initState();
     _loadLessonsData();
+    _loadTeachersData();
+    _loadClassesData();
   }
 
-  List<Map<String, String>> _lessonsList = [];
-List<Map<String, String>> _teachersList = [];
-List<Map<String, String>> _classesList = [];
-
-Future<void> _loadLessonsData() async {
-  try {
+  Future<void> _loadLessonsData() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('lessons').get();
     setState(() {
-      _lessonsList = querySnapshot.docs.map((doc) {
+      _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
           'id': doc.id,
@@ -658,69 +655,34 @@ Future<void> _loadLessonsData() async {
               '${data['lessonName']}, ${data['teacherName']}, ${data['className']}, ${data['lessonDay']}, ${data['lessonHour']}',
         };
       }).toList();
-      _mergeDataLists();
     });
-  } catch (e) {
-    print('Error loading lessons data: $e');
   }
-}
 
-Future<void> _loadTeachersData() async {
-  try {
+  Future<void> _loadTeachersData() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('teachers').get();
     setState(() {
-      _teachersList = querySnapshot.docs.map((doc) {
+      _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
-          'id': doc.id,
           'info': '${data['unvan']} ${data['ad']} ${data['soyad']}',
         };
       }).toList();
-      _mergeDataLists();
     });
-  } catch (e) {
-    print('Error loading teachers data: $e');
   }
-}
 
-Future<void> _loadClassesData() async {
-  try {
+  Future<void> _loadClassesData() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('classes').get();
     setState(() {
-      _classesList = querySnapshot.docs.map((doc) {
+      _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
-          'id': doc.id,
           'info': '${data['name']}',
         };
       }).toList();
-      _mergeDataLists();
     });
-  } catch (e) {
-    print('Error loading classes data: $e');
   }
-}
-
-
-Future<void> _mergeDataLists() async {
-  print('Merging data lists:');
-  print('Lessons: ${_lessonsList.length}');
-  print('Teachers: ${_teachersList.length}');
-  print('Classes: ${_classesList.length}');
-
-  _dataList = [..._lessonsList, ..._teachersList, ..._classesList];
-  print('Merged List: ${_dataList.length}');
-
-  setState(() {
-    // Update the state after merging lists
-    _dataList = [..._lessonsList, ..._teachersList, ..._classesList];
-  });
-}
-
-
-
 
   Future<void> _loadDataFromCollection(String collectionName) async {
     var querySnapshot =
@@ -740,17 +702,13 @@ Future<void> _mergeDataLists() async {
   }
 
   Future<void> _deleteDocument(String collectionName, String documentId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection(collectionName)
-          .doc(documentId)
-          .delete();
+    await FirebaseFirestore.instance
+        .collection(collectionName)
+        .doc(documentId)
+        .delete();
 
-      // Reload data after deletion
-      await _loadDataFromCollection(collectionName);
-    } catch (e) {
-      print('Error deleting document: $e');
-    }
+    // Reload data after deletion
+    await _loadDataFromCollection(collectionName);
   }
 
   Future<void> _editDocument(String collectionName, String documentId) async {
@@ -766,21 +724,21 @@ Future<void> _mergeDataLists() async {
       ),
       body: Column(
         children: [
-          Column(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    ElevatedButton(
-      onPressed: _loadLessonsData,
-      child: Text('Dersleri Göster'),
-    ),
-    ElevatedButton(
-      onPressed: _loadTeachersData,
-      child: Text('Öğretmenleri Göster'),
-    ),
-    ElevatedButton(
-      onPressed: _loadClassesData,
-      child: Text('Sınıfları Göster'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: _loadLessonsData,
+                child: Text('Load Lessons'),
+              ),
+              ElevatedButton(
+                onPressed: _loadTeachersData,
+                child: Text('Load Teachers'),
+              ),
+              ElevatedButton(
+                onPressed: _loadClassesData,
+                child: Text('Load Classes'),
               ),
             ],
           ),
@@ -821,7 +779,11 @@ Future<void> _mergeDataLists() async {
                                     child: const Text('Delete'),
                                     onPressed: () {
                                       // Call the function to delete the data
-                                      
+                                      if (data['collectionName'] != null &&
+                                          data['id'] != null) {
+                                        _deleteDocument(data['collectionName']!,
+                                            data['id']!);
+                                      }
                                       Navigator.of(context).pop();
                                     },
                                   ),
