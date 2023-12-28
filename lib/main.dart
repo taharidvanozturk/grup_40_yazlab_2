@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
+import 'package:camera/camera.dart';
 
 Future<List<String>> _getTeacherNames() async {
   var querySnapshot =
@@ -48,8 +49,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Grup 40 YazLab 2',
       theme: ThemeData(
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 8, 163, 79)),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 8, 163, 79)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Grup 40 YazLab 2'),
@@ -800,7 +801,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
         return Dialog(
           insetPadding: EdgeInsets.zero, // remove padding
           child: AlertDialog(
-            title: Text('Edit Document'),
+            title: const Text('Edit Document'),
             content: SingleChildScrollView(
               // add this to enable scrolling when the content is too large
               child: Column(
@@ -810,13 +811,13 @@ class _ManageDataPageState extends State<ManageDataPage> {
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, formValues);
                 },
-                child: Text('Save'),
+                child: const Text('Save'),
               ),
             ],
           ),
@@ -853,7 +854,9 @@ class _ManageDataPageState extends State<ManageDataPage> {
         await _loadDataFromCollection(documentData['collectionName']);
       } else {
         // Handle the case where 'collectionName' is null
-        print('collectionName is null');
+        if (kDebugMode) {
+          print('collectionName is null');
+        }
       }
     }
   }
