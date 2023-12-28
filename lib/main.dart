@@ -796,23 +796,29 @@ class _ManageDataPageState extends State<ManageDataPage> {
             );
           }
         }).toList();
-        return AlertDialog(
-          title: Text('Edit Document'),
-          content: Column(
-            children: formFields,
+        return Dialog(
+          insetPadding: EdgeInsets.zero, // remove padding
+          child: AlertDialog(
+            title: Text('Edit Document'),
+            content: SingleChildScrollView(
+              // add this to enable scrolling when the content is too large
+              child: Column(
+                children: formFields,
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, formValues);
+                },
+                child: Text('Save'),
+              ),
+            ],
           ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, formValues);
-              },
-              child: Text('Save'),
-            ),
-          ],
         );
       },
     );
