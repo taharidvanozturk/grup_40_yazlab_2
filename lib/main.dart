@@ -1,6 +1,7 @@
-// ignore_for_file: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, avoid_print, unused_field, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, library_private_types_in_public_api, prefer_final_fields, unused_element, prefer_const_constructors
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
@@ -30,7 +31,6 @@ Future<List<String>> _getClasses() async {
 }
 
 String _selectedHour = 'Saat Seçiniz';
-int _counter = 0;
 String _selectedNumber = 'Ders Saati Seçiniz';
 String _selectedTeacher = 'Öğretmen Seçiniz';
 
@@ -161,7 +161,6 @@ class DersEklemeSayfasi extends StatefulWidget {
 class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _dersAdiController = TextEditingController();
-  final TextEditingController _sinifController = TextEditingController();
   final TextEditingController _saatController = TextEditingController();
   String? _selectedDay;
   String _selectedClass = 'Sınıf Seçiniz';
@@ -380,14 +379,16 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           uniqueDays.isNotEmpty ? uniqueDays[0] : null;
                     }
 
-                    print(_selectedNumber);
+                    if (kDebugMode) {
+                      print(_selectedNumber);
+                    }
 
                     return Column(
                       children: [
                         DropdownButtonFormField<String>(
-                          value: _selectedNumber ?? 'Ders Saati Seçiniz',
+                          value: _selectedNumber,
                           items: [
-                            DropdownMenuItem<String>(
+                            const DropdownMenuItem<String>(
                               value: 'Ders Saati Seçiniz',
                               child: Text('Ders Saati Seçiniz'),
                             ),
@@ -407,7 +408,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           onChanged: (value) {
                             setState(() {
                               _selectedNumber = value!;
-                              _selectedHour = value!;
+                              _selectedHour = value;
                             });
                           },
                           decoration: const InputDecoration(
@@ -419,7 +420,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           items: uniqueDays.map((day) {
                             return DropdownMenuItem<String>(
                               value: day,
-                              child: Text('$day'),
+                              child: Text(day),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -530,7 +531,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
   void _saveTeacherData(BuildContext context) async {
     String fullName =
         '${_unvanController.text} ${_adController.text} ${_soyadController.text}';
-    String documentId = '$fullName';
+    String documentId = fullName;
 
     // Check if the document already exists
     var existingDoc = await FirebaseFirestore.instance
@@ -574,7 +575,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
 class ClassSchedulePage extends StatelessWidget {
   final String className;
 
-  ClassSchedulePage({required this.className});
+  const ClassSchedulePage({super.key, required this.className});
 
   @override
   Widget build(BuildContext context) {
@@ -632,7 +633,6 @@ class ManageDataPage extends StatefulWidget {
 }
 
 class _ManageDataPageState extends State<ManageDataPage> {
-  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _dataList = [];
 
   @override
@@ -652,11 +652,14 @@ class _ManageDataPageState extends State<ManageDataPage> {
         return {
           'collectionName': 'lessons',
           'id': doc.id,
-          ...data, // Return the entire document data
+          'info': '${data['lessonName']} - ${data['teacherName']}',
+          ...data,
         };
       }).toList();
     });
-    print(_dataList);
+    if (kDebugMode) {
+      print(_dataList);
+    }
   }
 
   Future<void> _loadTeachersData() async {
@@ -668,11 +671,14 @@ class _ManageDataPageState extends State<ManageDataPage> {
         return {
           'collectionName': 'teachers',
           'id': doc.id,
-          ...data, // Return the entire document data
+          'info': '${data['unvan']} ${data['ad']} ${data['soyad']}',
+          ...data,
         };
       }).toList();
     });
-    print(_dataList);
+    if (kDebugMode) {
+      print(_dataList);
+    }
   }
 
   Future<void> _loadClassesData() async {
@@ -681,7 +687,9 @@ class _ManageDataPageState extends State<ManageDataPage> {
     setState(() {
       _dataList = querySnapshot.docs.map((doc) {
         var data = doc.data();
-        print("Loaded classes data: $data"); // Add this line
+        if (kDebugMode) {
+          print("Loaded classes data: $data");
+        }
         return {
           'collectionName': 'classes',
           'id': doc.id,
@@ -690,6 +698,9 @@ class _ManageDataPageState extends State<ManageDataPage> {
         };
       }).toList();
     });
+    if (kDebugMode) {
+      print(_dataList);
+    }
   }
 
   Future<void> _loadDataFromCollection(String collectionName) async {
@@ -757,40 +768,49 @@ class _ManageDataPageState extends State<ManageDataPage> {
 
   Future<void> _editDocument(Map<String, dynamic> documentData) async {
     var existingData = documentData;
+    var formValues = Map<String, dynamic>.from(existingData);
+
     var editedData = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
-        // Form initial values
-        var formValues = existingData;
-
-        // Create a TextFormField for each field in the document
-        var formFields = existingData.keys.map((key) {
-          return TextFormField(
-            initialValue: existingData[key],
-            onChanged: (value) => formValues[key] = value,
-            decoration: InputDecoration(labelText: key),
-          );
+        var formFields = existingData.keys.map<Widget>((key) {
+          // specify the type here
+          if (key == 'info') {
+            var words = existingData[key].split(' ');
+            return Column(
+              children: words.map<Widget>((word) {
+                // and here
+                return TextFormField(
+                  initialValue: word,
+                  onChanged: (value) => formValues[key] = value,
+                  decoration: InputDecoration(labelText: word),
+                );
+              }).toList(), // convert the iterable to a list
+            );
+          } else {
+            // For other keys, create a TextFormField as usual
+            return TextFormField(
+              initialValue: existingData[key],
+              onChanged: (value) => formValues[key] = value,
+              decoration: InputDecoration(labelText: key),
+            );
+          }
         }).toList();
-
         return AlertDialog(
-          title: Text('Veri Düzenleme'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: formFields,
-            ),
+          title: Text('Edit Document'),
+          content: Column(
+            children: formFields,
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Cancel
-              },
-              child: Text('İptal'),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(formValues); // Confirm
+                Navigator.pop(context, formValues);
               },
-              child: Text('Onayla'),
+              child: Text('Save'),
             ),
           ],
         );
@@ -800,14 +820,19 @@ class _ManageDataPageState extends State<ManageDataPage> {
     // If the user confirmed the changes, update the document in the Firestore database
     if (editedData != null) {
       // Remove the 'collectionName' and 'id' fields from the editedData map
-      editedData.remove('collectionName');
-      editedData.remove('id');
 
-      await FirebaseFirestore.instance
-          .collection(documentData['collectionName'])
-          .doc(documentData['id'])
-          .update(editedData);
-
+      if (documentData['collectionName'] != null &&
+          documentData['id'] != null) {
+        await FirebaseFirestore.instance
+            .collection(documentData['collectionName'])
+            .doc(documentData['id'])
+            .update(editedData);
+      } else {
+        // Handle the case where 'collectionName' or 'id' is null
+        if (kDebugMode) {
+          print('collectionName or id is null');
+        }
+      }
       // Successfully updated message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -816,7 +841,13 @@ class _ManageDataPageState extends State<ManageDataPage> {
       );
 
       // Reload the data
-      await _loadDataFromCollection(documentData['collectionName']);
+      if (documentData['collectionName'] != null) {
+        // Reload the data
+        await _loadDataFromCollection(documentData['collectionName']);
+      } else {
+        // Handle the case where 'collectionName' is null
+        print('collectionName is null');
+      }
     }
   }
 
@@ -835,15 +866,15 @@ class _ManageDataPageState extends State<ManageDataPage> {
             children: [
               ElevatedButton(
                 onPressed: _loadLessonsData,
-                child: Text('Load Lessons'),
+                child: const Text('Load Lessons'),
               ),
               ElevatedButton(
                 onPressed: _loadTeachersData,
-                child: Text('Load Teachers'),
+                child: const Text('Load Teachers'),
               ),
               ElevatedButton(
                 onPressed: _loadClassesData,
-                child: Text('Load Classes'),
+                child: const Text('Load Classes'),
               ),
             ],
           ),
