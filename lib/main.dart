@@ -48,7 +48,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Grup 40 YazLab 2',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 8, 163, 79)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Grup 40 YazLab 2'),
