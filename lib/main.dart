@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
-import 'package:camera/camera.dart';
 
 Future<List<String>> _getTeacherNames() async {
   var querySnapshot =
