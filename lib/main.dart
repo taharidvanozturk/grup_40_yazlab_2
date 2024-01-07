@@ -1,12 +1,15 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, prefer_const_constructors
+
+import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
+import 'package:flutter_scalable_ocr/flutter_scalable_ocr.dart';
 
-Future<List<String>> _getTeacherNames() async {
+Future<List<String>> _hocalariGetir() async {
   var querySnapshot =
       await FirebaseFirestore.instance.collection('teachers').get();
   return querySnapshot.docs
@@ -14,7 +17,7 @@ Future<List<String>> _getTeacherNames() async {
       .toList();
 }
 
-Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
+Future<List<Map<String, String>>> _gridSaatleriGetir() async {
   var querySnapshot = await FirebaseFirestore.instance.collection('grid').get();
   return querySnapshot.docs
       .map((doc) => {
@@ -24,15 +27,15 @@ Future<List<Map<String, String>>> _getHoursFromGridCollection() async {
       .toList();
 }
 
-Future<List<String>> _getClasses() async {
+Future<List<String>> _siniflariGetir() async {
   var querySnapshot =
       await FirebaseFirestore.instance.collection('classes').get();
   return querySnapshot.docs.map((doc) => doc['name'] as String).toList();
 }
 
-String _selectedHour = 'Saat Seçiniz';
+String _secilenSaat = 'Saat Seçiniz';
 String _selectedNumber = 'Ders Saati Seçiniz';
-String _selectedTeacher = 'Öğretmen Seçiniz';
+String _secilenHoca = 'Öğretmen Seçiniz';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +69,53 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class KameraEkrani extends StatelessWidget {
+  const KameraEkrani({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Implement your camera functionality here
+    // You can use the ScalableOCR widget and other camera-related code
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kamera Ekranı'),
+      ),
+      body: Center(
+        child: ScalableOCR(
+          getScannedText: (text) {
+            // Handle the scanned text here
+          },
+        ),
+        // Your ScalableOCR properties
+      ),
+    );
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
+  String text = "";
+  final StreamController<String> controller = StreamController<String>();
+  void _kameraAc() async {
+    // Add your camera-related logic here
+    // For example, navigate to a new screen with the camera
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => KameraEkrani(),
+      ),
+    );
+  }
+
+  void setText(value) {
+    controller.add(value);
+  }
+
+  @override
+  void dispose() {
+    controller.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,44 +158,55 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: FutureBuilder<List<String>>(
-        future: _getClasses(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else if (snapshot.hasData && snapshot.data != null) {
-            List<String> classNames = snapshot.data!;
-            return Center(
-              child: Wrap(
-                spacing: 8.0, // gap between adjacent chips
-                runSpacing: 4.0, // gap between lines
-                children: classNames.map((className) {
-                  return SizedBox(
-                    width: MediaQuery.of(context).size.width /
-                        2, // half of screen width
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ClassSchedulePage(className: className),
-                          ),
-                        );
-                      },
-                      child: Text(className),
-                    ),
-                  );
-                }).toList(),
-              ),
-            );
-          } else {
-            return const Text(
-                'Sınıf bilgileri bulunamadı veya kayıtlı sınıf yok.');
-          }
-        },
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FutureBuilder<List<String>>(
+            future: _siniflariGetir(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (snapshot.hasData && snapshot.data != null) {
+                List<String> sinifAdlari = snapshot.data!;
+                return Center(
+                  child: Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: sinifAdlari.map((sinifAdi) {
+                      return SizedBox(
+                        width: MediaQuery.of(context).size.width / 2,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ClassSchedulePage(sinifAdi: sinifAdi),
+                              ),
+                            );
+                          },
+                          child: Text(sinifAdi),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              } else {
+                return const Text(
+                  'Sınıf bilgileri bulunamadı veya kayıtlı sınıf yok.',
+                );
+              }
+            },
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              _kameraAc();
+            },
+            child: Icon(Icons.camera_alt_sharp),
+          ),
+        ],
       ),
     );
   }
@@ -163,23 +223,23 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _dersAdiController = TextEditingController();
   final TextEditingController _saatController = TextEditingController();
-  String? _selectedDay;
-  String _selectedClass = 'Sınıf Seçiniz';
+  String? _secilenGun;
+  String _secilenSinif = 'Sınıf Seçiniz';
 
-  Future<void> _saveLessonData(BuildContext context) async {
-    String lessonName = _dersAdiController.text;
-    String lessonHour = _selectedHour;
-    String teacherName = _selectedTeacher;
-    String lessonDay = _selectedDay ?? 'Gün Seçiniz'; // Default value for day
-    String className = _selectedClass;
+  Future<void> _dersIcerigiKaydet(BuildContext context) async {
+    String dersAdi = _dersAdiController.text;
+    String dersSaati = _secilenSaat;
+    String hocaAdi = _secilenHoca;
+    String dersGunu = _secilenGun ?? 'Gün Seçiniz';
+    String sinifAdi = _secilenSinif;
 
     // Check if the teacher already has a lesson at the same time, day, and class
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('lessons')
-        .where('lessonHour', isEqualTo: lessonHour)
-        .where('lessonDay', isEqualTo: lessonDay)
-        .where('teacherName', isEqualTo: teacherName)
-        .where('className', isEqualTo: className)
+        .where('lessonHour', isEqualTo: dersSaati)
+        .where('lessonDay', isEqualTo: dersGunu)
+        .where('teacherName', isEqualTo: hocaAdi)
+        .where('className', isEqualTo: sinifAdi)
         .get();
 
     if (querySnapshot.docs.isNotEmpty) {
@@ -193,11 +253,11 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
     } else {
       // No conflicting lessons found, proceed to save the new lesson
       await FirebaseFirestore.instance.collection('lessons').add({
-        'lessonName': lessonName,
-        'className': className,
-        'lessonHour': _selectedHour,
-        'lessonDay': lessonDay, // Save the day
-        'teacherName': teacherName,
+        'lessonName': dersAdi,
+        'className': sinifAdi,
+        'lessonHour': _secilenSaat,
+        'lessonDay': dersGunu, // Save the day
+        'teacherName': hocaAdi,
       });
 
       // Show success message
@@ -211,10 +271,10 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
       _dersAdiController.clear();
       _saatController.clear();
       setState(() {
-        _selectedTeacher = 'Öğretmen Seçiniz';
-        _selectedClass = 'Sınıf Seçiniz';
-        _selectedDay = 'Gün Seçiniz';
-        _selectedHour = 'Ders Saati Seçiniz';
+        _secilenHoca = 'Öğretmen Seçiniz';
+        _secilenSinif = 'Sınıf Seçiniz';
+        _secilenGun = 'Gün Seçiniz';
+        _secilenSaat = 'Ders Saati Seçiniz';
       });
     }
   }
@@ -222,15 +282,15 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
   @override
   void initState() {
     super.initState();
-    _loadTeacherNames();
+    _hocalariGoster();
   }
 
-  Future<void> _loadTeacherNames() async {
+  Future<void> _hocalariGoster() async {
     // Load teacher names and set initial value for _selectedTeacher
-    List<String> teacherNames = await _getTeacherNames();
-    if (teacherNames.isNotEmpty) {
+    List<String> hocaAdlari = await _hocalariGetir();
+    if (hocaAdlari.isNotEmpty) {
       setState(() {
-        _selectedTeacher = teacherNames[0];
+        _secilenHoca = hocaAdlari[0];
       });
     }
   }
@@ -258,24 +318,24 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                 },
               ),
               FutureBuilder<List<String>>(
-                future: _getTeacherNames(),
+                future: _hocalariGetir(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else if (snapshot.hasData && snapshot.data != null) {
-                    List<String> teacherNames = snapshot.data!;
+                    List<String> hocaAdlari = snapshot.data!;
 
-                    if (!teacherNames.contains(_selectedTeacher)) {
-                      _selectedTeacher = teacherNames.isNotEmpty
-                          ? teacherNames[0]
+                    if (!hocaAdlari.contains(_secilenHoca)) {
+                      _secilenHoca = hocaAdlari.isNotEmpty
+                          ? hocaAdlari[0]
                           : 'Öğretmen Seçiniz';
                     }
 
                     return DropdownButtonFormField<String>(
-                      value: _selectedTeacher,
-                      items: teacherNames.map((teacher) {
+                      value: _secilenHoca,
+                      items: hocaAdlari.map((teacher) {
                         return DropdownMenuItem<String>(
                           value: teacher,
                           child: Text(teacher),
@@ -283,7 +343,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedTeacher = value!;
+                          _secilenHoca = value!;
                         });
                       },
                       decoration: const InputDecoration(labelText: 'Öğretmen'),
@@ -294,24 +354,24 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                 },
               ),
               FutureBuilder<List<String>>(
-                future: _getClasses(),
+                future: _siniflariGetir(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else if (snapshot.hasData && snapshot.data != null) {
-                    List<String> classNames = snapshot.data!;
+                    List<String> sinifAdlari = snapshot.data!;
 
-                    if (!classNames.contains(_selectedClass)) {
-                      _selectedClass = classNames.isNotEmpty
-                          ? classNames[0]
+                    if (!sinifAdlari.contains(_secilenSinif)) {
+                      _secilenSinif = sinifAdlari.isNotEmpty
+                          ? sinifAdlari[0]
                           : 'Sınıf Seçiniz';
                     }
 
                     return DropdownButtonFormField<String>(
-                      value: _selectedClass,
-                      items: classNames.map((className) {
+                      value: _secilenSinif,
+                      items: sinifAdlari.map((className) {
                         return DropdownMenuItem<String>(
                           value: className,
                           child: Text(className),
@@ -319,7 +379,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedClass = value!;
+                          _secilenSinif = value!;
                         });
                       },
                       decoration: const InputDecoration(labelText: 'Sınıf'),
@@ -330,22 +390,23 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                 },
               ),
               FutureBuilder<List<Map<String, String>>>(
-                future: _getHoursFromGridCollection(),
+                future: _gridSaatleriGetir(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else if (snapshot.hasData && snapshot.data != null) {
-                    List<Map<String, String>> lessonInfos = snapshot.data!;
+                    List<Map<String, String>> derslerinBilgileri =
+                        snapshot.data!;
 
                     List<String> uniqueNumbers = [];
                     List<String> uniqueDays = [];
 
                     // Extract unique "text" values for hours and days
-                    for (var lessonInfo in lessonInfos) {
-                      String id = lessonInfo['id']!;
-                      String text = lessonInfo['text']!;
+                    for (var dersBilgileri in derslerinBilgileri) {
+                      String id = dersBilgileri['id']!;
+                      String text = dersBilgileri['text']!;
 
                       if (id.startsWith('1x1') ||
                           id.startsWith('2x1') ||
@@ -374,9 +435,9 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       }
                     }
 
-                    if (_selectedDay == null ||
-                        !uniqueDays.contains(_selectedDay!)) {
-                      _selectedDay =
+                    if (_secilenGun == null ||
+                        !uniqueDays.contains(_secilenGun!)) {
+                      _secilenGun =
                           uniqueDays.isNotEmpty ? uniqueDays[0] : null;
                     }
 
@@ -409,7 +470,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           onChanged: (value) {
                             setState(() {
                               _selectedNumber = value!;
-                              _selectedHour = value;
+                              _secilenSaat = value;
                             });
                           },
                           decoration: const InputDecoration(
@@ -417,7 +478,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           ),
                         ),
                         DropdownButtonFormField<String>(
-                          value: _selectedDay ?? 'Gün Seçiniz',
+                          value: _secilenGun ?? 'Gün Seçiniz',
                           items: uniqueDays.map((day) {
                             return DropdownMenuItem<String>(
                               value: day,
@@ -426,7 +487,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                           }).toList(),
                           onChanged: (value) {
                             setState(() {
-                              _selectedDay = value!;
+                              _secilenGun = value!;
                             });
                           },
                           decoration:
@@ -444,7 +505,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _saveLessonData(context);
+                    _dersIcerigiKaydet(context);
                   }
                 },
                 child: const Text('Kaydet'),
@@ -517,7 +578,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _saveTeacherData(context);
+                    _ogretmenBilgiKaydet(context);
                   }
                 },
                 child: const Text('Kaydet'),
@@ -529,7 +590,7 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
     );
   }
 
-  void _saveTeacherData(BuildContext context) async {
+  void _ogretmenBilgiKaydet(BuildContext context) async {
     String fullName =
         '${_unvanController.text} ${_adController.text} ${_soyadController.text}';
     String documentId = fullName;
@@ -574,20 +635,20 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
 }
 
 class ClassSchedulePage extends StatelessWidget {
-  final String className;
+  final String sinifAdi;
 
-  const ClassSchedulePage({super.key, required this.className});
+  const ClassSchedulePage({super.key, required this.sinifAdi});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('$className Sınıfı Haftalık Ders Programı'),
+        title: Text('$sinifAdi Sınıfı Haftalık Ders Programı'),
       ),
       body: FutureBuilder<QuerySnapshot>(
         future: FirebaseFirestore.instance
             .collection('lessons')
-            .where('className', isEqualTo: className)
+            .where('className', isEqualTo: sinifAdi)
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
