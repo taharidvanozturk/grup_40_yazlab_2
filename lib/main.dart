@@ -54,18 +54,18 @@ class MyApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 8, 163, 79)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Grup 40 YazLab 2'),
+      home: const AnaSayfa(title: 'Grup 40 YazLab 2'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class AnaSayfa extends StatefulWidget {
+  const AnaSayfa({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<AnaSayfa> createState() => _AnaSayfaState();
 }
 
 class KameraEkrani extends StatelessWidget {
@@ -93,7 +93,7 @@ class KameraEkrani extends StatelessWidget {
   }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _AnaSayfaState extends State<AnaSayfa> {
   String text = "";
   final StreamController<String> controller = StreamController<String>();
   void _kameraAc() async {
