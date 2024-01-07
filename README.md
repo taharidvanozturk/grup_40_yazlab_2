@@ -44,7 +44,7 @@
 
 - Ders ekleme ekranında bir form mantığı kurulmuştur. veritabanı üzerinden alınan veriler gerekli kısımlara dağıtılarak kullanıcının yanlış ya da uyumsuz bir formatta ders eklemesi engellenmeye çalışılmıştır.
 
-#### Ders Ekleme Durumunda Çakışmaları
+#### Ders Ekleme Durumunda Çakışma Kontrolü
 
 - Ders saati, Sınıf, Öğretim Görevlisi müsaitliği ve Günler veritabanı içerisinde bir ders için aynı table'da olup olmadığı kontrol edilerek aynı seçeneklere ders eklenmesi engellenmiştir.
 
