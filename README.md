@@ -9,11 +9,11 @@
 
 ## Projenin Çalıştırılması
 1. öncelikle gerekli geliştirme ortamlarının kurulu olduğundan emin olunur.
-- VS Code için:
-    _Dart Extension
-    _Flutter Extension
-    _Flutter SDK
-    _Android SDK 
+    - VS Code için:
+        - Dart Extension
+            - Flutter Extension
+                - Flutter SDK
+                    - Android SDK 
 1. Proje öncelikle 'git clone' komutu kullanılarak istenilen klasöre klonlanır.
 ## Uygulama Sayfaları
 
