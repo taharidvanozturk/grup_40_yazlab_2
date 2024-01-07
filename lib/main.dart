@@ -10,7 +10,6 @@ import 'package:flutter_scalable_ocr/flutter_scalable_ocr.dart';
 import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 
-
 Future<List<String>> _hocalariGetir() async {
   var querySnapshot =
       await FirebaseFirestore.instance.collection('teachers').get();
