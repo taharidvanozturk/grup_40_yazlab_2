@@ -1,7 +1,3 @@
-# grup_40_yazlab_2
-
-A new Flutter project.
-
 ## Grup 40 2'No lu Yazılım Geliştirme Laboratuvarı-I Projesi
 
 Bu projede Flutter, Firebase Firestore, ARCore ve flutter_scalable_ocr.dart kütüphanesi kullanılarak bir Firestore veritabanı üzerinde çalışan ders programı uygulaması çalışması yapılmıştır. 
