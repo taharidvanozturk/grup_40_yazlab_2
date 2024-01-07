@@ -888,11 +888,10 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, formValues);
-  
-                    _derslerVeriGoster();
-                    _hocalarVeriGoster();
-                    _siniflarVeriGoster();
-  
+
+                  _derslerVeriGoster();
+                  _hocalarVeriGoster();
+                  _siniflarVeriGoster();
                 },
                 child: const Text('Kaydet'),
               ),
