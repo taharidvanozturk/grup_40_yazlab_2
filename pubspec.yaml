@@ -37,7 +37,7 @@ dependencies:
   firebase_core: ^2.24.2
   cloud_firestore: ^4.13.6
   flutter_scalable_ocr: ^2.0.0
-
+  arcore_flutter_plugin: ^0.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

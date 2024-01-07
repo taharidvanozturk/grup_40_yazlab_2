@@ -1,13 +1,15 @@
 // ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, prefer_const_constructors
 
 import 'dart:async';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
 import 'package:flutter_scalable_ocr/flutter_scalable_ocr.dart';
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
+
 
 Future<List<String>> _hocalariGetir() async {
   var querySnapshot =
@@ -83,7 +85,9 @@ class KameraEkrani extends StatelessWidget {
       body: Center(
         child: ScalableOCR(
           getScannedText: (text) {
-            // Handle the scanned text here
+            if (kDebugMode) {
+              print(text);
+            }
           },
         ),
         // Your ScalableOCR properties
@@ -151,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ManageDataPage(),
+                  builder: (context) => const VeriDuzenlemeEkrani(),
                 ),
               );
             },
@@ -687,15 +691,15 @@ class ClassSchedulePage extends StatelessWidget {
   }
 }
 
-class ManageDataPage extends StatefulWidget {
-  const ManageDataPage({Key? key}) : super(key: key);
+class VeriDuzenlemeEkrani extends StatefulWidget {
+  const VeriDuzenlemeEkrani({Key? key}) : super(key: key);
 
   @override
-  _ManageDataPageState createState() => _ManageDataPageState();
+  _VeriDuzenlemeEkraniState createState() => _VeriDuzenlemeEkraniState();
 }
 
-class _ManageDataPageState extends State<ManageDataPage> {
-  List<Map<String, dynamic>> _dataList = [];
+class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
+  List<Map<String, dynamic>> _veriListesi = [];
 
   @override
   void initState() {
@@ -709,7 +713,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('lessons').get();
     setState(() {
-      _dataList = querySnapshot.docs.map((doc) {
+      _veriListesi = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
           'collectionName': 'lessons',
@@ -720,7 +724,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
       }).toList();
     });
     if (kDebugMode) {
-      print(_dataList);
+      print(_veriListesi);
     }
   }
 
@@ -728,7 +732,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('teachers').get();
     setState(() {
-      _dataList = querySnapshot.docs.map((doc) {
+      _veriListesi = querySnapshot.docs.map((doc) {
         var data = doc.data();
         return {
           'collectionName': 'teachers',
@@ -739,7 +743,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
       }).toList();
     });
     if (kDebugMode) {
-      print(_dataList);
+      print(_veriListesi);
     }
   }
 
@@ -747,7 +751,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('classes').get();
     setState(() {
-      _dataList = querySnapshot.docs.map((doc) {
+      _veriListesi = querySnapshot.docs.map((doc) {
         var data = doc.data();
         if (kDebugMode) {
           print("Loaded classes data: $data");
@@ -761,7 +765,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
       }).toList();
     });
     if (kDebugMode) {
-      print(_dataList);
+      print(_veriListesi);
     }
   }
 
@@ -770,7 +774,7 @@ class _ManageDataPageState extends State<ManageDataPage> {
         await FirebaseFirestore.instance.collection(collectionName).get();
 
     setState(() {
-      _dataList = querySnapshot.docs
+      _veriListesi = querySnapshot.docs
           .map((doc) => {
                 'id': doc.id,
                 'collectionName': collectionName,
@@ -950,9 +954,9 @@ class _ManageDataPageState extends State<ManageDataPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _dataList.length,
+              itemCount: _veriListesi.length,
               itemBuilder: (context, index) {
-                var data = _dataList[index];
+                var data = _veriListesi[index];
                 return ListTile(
                   title: Text(data['info'] ?? ''),
                   trailing: Row(
@@ -961,13 +965,13 @@ class _ManageDataPageState extends State<ManageDataPage> {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          _editDocument(_dataList[index]);
+                          _editDocument(_veriListesi[index]);
                         },
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          _deleteDocument([_dataList[index]]);
+                          _deleteDocument([_veriListesi[index]]);
                         },
                       )
                     ],
