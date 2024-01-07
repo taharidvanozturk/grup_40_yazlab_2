@@ -6,6 +6,10 @@
 
 - Proje kodları mümkün olduğunca dinamik çalışacak şekilde yazılmış olup değişmeye uygun bir şekilde oluşturulmaya çalışılmıştır.
 
+
+## Projenin Çalıştırılması
+1. Proje öncelikle 'git clone' komutu kullanılarak istenilen klasöre klonlanır.
+1. deneme
 ## Uygulama Sayfaları
 
 - Bu bölümde uygulamada bulunan sayfalar tanıtılacaktır.
@@ -36,7 +40,7 @@
 
 ### Öğretim Görevlisi Ekleme Ekranı
 
-- Bu ekranda Öğretim Görevlisinin Ünvanı, Adı ve Soyadı bilgileri alınarak "Ünvan+Ad+Soyad" sıralaması ile dosya ismi olarak ve içerisinde de "unvan", "ad" ve "soyad" "field"'larına kaydedilmektedir.
+- Bu ekranda Öğretim Görevlisinin Ünvanı, Adı ve Soyadı bilgileri alınarak "Ünvan+Ad+Soyad" sıralaması ile dosya ismi olarak ve içerisinde de "unvan", "ad" ve "soyad" field'larına kaydedilmektedir.
 
 ![Öğretim Görevlisi Ekleme Ekranı](photos/hocaekleme.jpg)
 
@@ -51,3 +55,7 @@
 #### Veri Silme Tuşu
 
 - Veri silme özelliği için main.dart dosyasındaki "\_dbVeriSil" Future'ı kullanılarak seçilen verinin collectionName'i ve documentId'si ile eşleşen table silinir.
+
+![Veri Düzenleme Ekranı](photos/veriduzenlemeekrani.jpg)
+![Sınıf Düzenleme Ekranı](photos/sinifduzenleme.jpg)
+![Öğretim Görevlisi Düzenleme Ekranı](photos/hocaduzenleme.jpg)
