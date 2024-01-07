@@ -38,8 +38,10 @@
 
 ### Sınıf Görünümleri
 
-![Örnek Bir Sınıfın Haftalık Ders Programı](photos/sinifdersgorunumu.jpg)
 
+<p align="center">
+  <img src="photos/sinifdersgorunumu.jpg" alt="Örnek Bir Sınıfın Haftalık Ders Programı"/>
+</p>
 - Sınıf Görünümleri kısmında boyuları içeriğe göre değişken bir Sütun yapısı kullanılmış ve Firestore veritabanı komutları kullanılarak "lessons" koleksiyonundan "className" alanı seçilen sınıfla uyan dersler yüklenmiş ve bir GridView içerisine yerleştirilmiştir.
 
 ### Ders Ekleme Ekranı
@@ -50,15 +52,21 @@
 
 - Ders saati, Sınıf, Öğretim Görevlisi müsaitliği ve Günler veritabanı içerisinde bir ders için aynı table'da olup olmadığı kontrol edilerek aynı seçeneklere ders eklenmesi engellenmiştir.
 
-![Ders Ekleme Ekranı](photos/dersekleme.jpg)
+<p align="center">
+  <img src="photos/dersekleme.jpg" alt="Ders Ekleme Ekranı"/>
+</p>
 
-![Ders Ekleme Ekranı Dropdown Menu Örneği](photos/dersekleme2.jpg)
+<p align="center">
+  <img src="photos/dersekleme2.jpg" alt="Ders Ekleme Ekranı Dropdown Menu Örneği"/>
+</p>
 
 ### Öğretim Görevlisi Ekleme Ekranı
 
 - Bu ekranda Öğretim Görevlisinin Ünvanı, Adı ve Soyadı bilgileri alınarak "Ünvan+Ad+Soyad" sıralaması ile dosya ismi olarak ve içerisinde de "unvan", "ad" ve "soyad" field'larına kaydedilmektedir.
 
-![Öğretim Görevlisi Ekleme Ekranı](photos/hocaekleme.jpg)
+<p align="center">
+  <img src="photos/hocaekleme.jpg" alt="Öğretim Görevlisi Ekleme Ekranı"/>
+</p>
 
 ### Veri Düzenleme Ekranı
 
@@ -72,6 +80,15 @@
 
 - Veri silme özelliği için main.dart dosyasındaki "\_dbVeriSil" Future'ı kullanılarak seçilen verinin collectionName'i ve documentId'si ile eşleşen table silinir.
 
-![Veri Düzenleme Ekranı](photos/veriduzenlemeekrani.jpg)
-![Sınıf Düzenleme Ekranı](photos/sinifduzenleme.jpg)
-![Öğretim Görevlisi Düzenleme Ekranı](photos/hocaduzenleme.jpg)
+
+<p align="center">
+  <img src="photos/veriduzenlemeekrani.jpg" alt="Veri Düzenleme Ekranı"/>
+</p>
+
+<p align="center">
+  <img src="photos/sinifduzenleme.jpg" alt="Sınıf Düzenleme Ekranı"/>
+</p>
+
+<p align="center">
+  <img src="photos/hocaduzenleme.jpg" alt="Öğretim Görevlisi Düzenleme Ekranı"/>
+</p>
