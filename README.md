@@ -14,6 +14,12 @@
 
 ![Uygulama Ana Sayfasının Görünüşü](photos/anasayfa.jpg)
 
+* Uygulama ana sayfasında sınıf seçim kısmı, OCR fonksiyonu, Ders Ekleme Ekranı, Öğretim Görevlisi Ekleme Ekranı ve Veri Düzenleme Ekranı kısımları bulunmaktadır.
 
+### Sınıf Görünümleri
+
+![Örnek Bir Sınıfın Haftalık Ders Programı](photos/sinifdersgorunumu.jpg)
+
+* Sınıf Görünümleri kısmında boyuları içeriğe göre değişken bir Sütun yapısı kullanılmış ve Firestore veritabanı komutları kullanılarak "lessons" koleksiyonundan "className" alanı seçilen sınıfla uyan dersler yüklenmiş ve bir GridView içerisine yerleştirilmiştir.
 
 
