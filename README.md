@@ -30,7 +30,9 @@
 
 ### Ana Sayfa
 
-![Uygulama Ana Sayfasının Görünüşü](photos/anasayfa.jpg)
+<p align="center">
+  <img src="photos/anasayfa.jpg" alt="Uygulama Ana Sayfasının Görünüşü"/>
+</p>
 
 - Uygulama ana sayfasında sınıf seçim kısmı, OCR fonksiyonu, Ders Ekleme Ekranı, Öğretim Görevlisi Ekleme Ekranı ve Veri Düzenleme Ekranı kısımları bulunmaktadır.
 
