@@ -1,4 +1,4 @@
-## Grup 40 2'No lu Yazılım Geliştirme Laboratuvarı-I Projesi
+# Grup 40 2'No lu Yazılım Geliştirme Laboratuvarı-I Projesi
 
 - Bu projede Flutter, Firebase Firestore, ARCore ve flutter_scalable_ocr.dart kütüphanesi kullanılarak bir Firestore veritabanı üzerinde çalışan ders programı uygulaması çalışması yapılmıştır.
 
@@ -8,8 +8,13 @@
 
 
 ## Projenin Çalıştırılması
+1. öncelikle gerekli geliştirme ortamlarının kurulu olduğundan emin olunur.
+- VS Code için:
+2. Dart Extension
+2. Flutter Extension
+2. Flutter SDK
+2. Android SDK 
 1. Proje öncelikle 'git clone' komutu kullanılarak istenilen klasöre klonlanır.
-1. deneme
 ## Uygulama Sayfaları
 
 - Bu bölümde uygulamada bulunan sayfalar tanıtılacaktır.
