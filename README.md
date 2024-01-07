@@ -95,7 +95,7 @@
 
 - Veritabanı olarak mobil uygulama alanında popüler olması ve Flutter gibi Google tarafından yaratılmış bir sistem olduğundan Firebase tercih edilmiştir.
 
-- Tabloların formatı
+### Tabloların formatı
 - | Koleksiyonlar | Dökümanlar                                                                                                       | Alanlar                                                             |
   | ------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
   | classes       | Döküman Adları Sınıf Adlarından Oluşur                                                                           | "name"                                                              |
