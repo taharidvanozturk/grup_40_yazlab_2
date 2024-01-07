@@ -38,7 +38,6 @@
 
 ### Sınıf Görünümleri
 
-
 <p align="center">
   <img src="photos/sinifdersgorunumu.jpg" alt="Örnek Bir Sınıfın Haftalık Ders Programı"/>
 </p>
@@ -80,7 +79,6 @@
 
 - Veri silme özelliği için main.dart dosyasındaki "\_dbVeriSil" Future'ı kullanılarak seçilen verinin collectionName'i ve documentId'si ile eşleşen table silinir.
 
-
 <p align="center">
   <img src="photos/veriduzenlemeekrani.jpg" alt="Veri Düzenleme Ekranı"/>
 </p>
@@ -92,3 +90,15 @@
 <p align="center">
   <img src="photos/hocaduzenleme.jpg" alt="Öğretim Görevlisi Düzenleme Ekranı"/>
 </p>
+
+## Uygulama Veritabanı Yapısı
+
+- Veritabanı olarak mobil uygulama alanında popüler olması ve Flutter gibi Google tarafından yaratılmış bir sistem olduğundan Firebase tercih edilmiştir.
+
+- Tabloların formatı
+- | Koleksiyonlar | Dökümanlar                                                                                                       | Alanlar                                                             |
+  | ------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+  | classes       | Döküman Adları Sınıf Adlarından Oluşur                                                                           | "name"                                                              |
+  | grid          | Grid Koleksiyonu içerisinde bir haftalık ders programı yapısı ızgaralara bölünüp isimlendirilmiştir              | "color", "id", "text"                                               |
+  | lessons       | Derslerin Döküman İsimleri Auto-ID ile verilmiştir                                                               | "className", "lessonDay", "lessonHour", "lessonName", "teacherName" |
+  | teachers      | Öğretim Görevlilerinin Döküman İsimleri "unvan", ad" ve "soyad" Alanlarındaki verilier birleştirerek oluşturulur | "unvan", "ad", "soyad"                                              |
