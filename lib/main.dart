@@ -73,8 +73,6 @@ class KameraEkrani extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Implement your camera functionality here
-    // You can use the ScalableOCR widget and other camera-related code
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kamera Ekranı'),
@@ -408,9 +406,11 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                     for (var dersBilgileri in derslerinBilgileri) {
                       String id = dersBilgileri['id']!;
                       String text = dersBilgileri['text']!;
+                      if (kDebugMode) {
+                        print('ID: $id, Text: $text');
+                      } // Add this line for debugging
 
-                      if (id.startsWith('1x1') ||
-                          id.startsWith('2x1') ||
+                      if (id.startsWith('2x1') ||
                           id.startsWith('3x1') ||
                           id.startsWith('4x1') ||
                           id.startsWith('5x1') ||
@@ -436,6 +436,14 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                       }
                     }
 
+                    // Sort the uniqueNumbers list numerically
+                    uniqueNumbers.sort((a, b) {
+                      // Extract numerical part from 'a' and 'b'
+                      int aNumber = int.parse(a.split('.Ders ')[0]);
+                      int bNumber = int.parse(b.split('.Ders ')[0]);
+
+                      return aNumber.compareTo(bNumber);
+                    });
                     if (_secilenGun == null ||
                         !uniqueDays.contains(_secilenGun!)) {
                       _secilenGun =
@@ -455,16 +463,16 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                               value: 'Ders Saati Seçiniz',
                               child: Text('Ders Saati Seçiniz'),
                             ),
-                            ...Set.from(uniqueNumbers).map((number) {
+                            ...uniqueNumbers.map((number) {
                               if (number == 'Ders Saati Seçiniz') {
                                 return DropdownMenuItem<String>(
                                   value: number,
-                                  child: Text('$number'),
+                                  child: Text(number),
                                 );
                               }
                               return DropdownMenuItem<String>(
                                 value: number,
-                                child: Text('$number'),
+                                child: Text(number),
                               );
                             }),
                           ],
@@ -767,6 +775,8 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
   }
 
   Future<void> _dbVeriCek(String collectionName) async {
+    // Access the collection name and document ID from the data list
+
     var querySnapshot =
         await FirebaseFirestore.instance.collection(collectionName).get();
 
@@ -836,33 +846,36 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     var editedData = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
-        var formFields = existingData.keys.map<Widget>((key) {
+        var formFields = existingData.keys
+            .where((key) =>
+                key != 'collectionName' && key != 'id' && key != 'info')
+            .map<Widget>((key) {
+          var value = existingData[key];
           if (key == 'info') {
-            var words = existingData[key].split(' ');
+            var words = value.split(' ');
             return Column(
               children: words.map<Widget>((word) {
                 return TextFormField(
                   initialValue: word,
-                  onChanged: (value) => formValues[key] = value,
+                  onChanged: (newValue) => formValues[key] = newValue,
                   decoration: InputDecoration(labelText: word),
                 );
-              }).toList(), // convert the iterable to a list
+              }).toList(),
             );
           } else {
-            // For other keys, create a TextFormField as usual
             return TextFormField(
-              initialValue: existingData[key],
-              onChanged: (value) => formValues[key] = value,
+              initialValue: value,
+              onChanged: (newValue) => formValues[key] = newValue,
               decoration: InputDecoration(labelText: key),
             );
           }
         }).toList();
+
         return Dialog(
-          insetPadding: EdgeInsets.zero, // remove padding
+          insetPadding: EdgeInsets.zero,
           child: AlertDialog(
             title: const Text('Veri Düzenleme'),
             content: SingleChildScrollView(
-              // add this to enable scrolling when the content is too large
               child: Column(
                 children: formFields,
               ),
@@ -875,6 +888,11 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, formValues);
+  
+                    _derslerVeriGoster();
+                    _hocalarVeriGoster();
+                    _siniflarVeriGoster();
+  
                 },
                 child: const Text('Kaydet'),
               ),
@@ -886,20 +904,23 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
 
     // If the user confirmed the changes, update the document in the Firestore database
     if (editedData != null) {
-      // Remove the 'collectionName' and 'id' fields from the editedData map
+      // Create a map only with the fields that need to be updated
+      Map<String, dynamic> updatedData = {};
+      formValues.forEach((key, value) {
+        if (existingData[key] != value) {
+          updatedData[key] = value;
+        }
+      });
 
-      if (documentData['collectionName'] != null &&
+      if (updatedData.isNotEmpty &&
+          documentData['collectionName'] != null &&
           documentData['id'] != null) {
         await FirebaseFirestore.instance
             .collection(documentData['collectionName'])
             .doc(documentData['id'])
-            .update(editedData);
-      } else {
-        // Handle the case where 'collectionName' or 'id' is null
-        if (kDebugMode) {
-          print('collectionName yada id null');
-        }
+            .update(updatedData);
       }
+
       // Successfully updated message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -909,13 +930,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
 
       // Reload the data
       if (documentData['collectionName'] != null) {
-        // Reload the data
         await _dbVeriCek(documentData['collectionName']);
-      } else {
-        // Handle the case where 'collectionName' is null
-        if (kDebugMode) {
-          print('collectionName null');
-        }
       }
     }
   }
