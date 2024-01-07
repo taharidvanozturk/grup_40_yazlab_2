@@ -837,12 +837,10 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
       context: context,
       builder: (BuildContext context) {
         var formFields = existingData.keys.map<Widget>((key) {
-          // specify the type here
           if (key == 'info') {
             var words = existingData[key].split(' ');
             return Column(
               children: words.map<Widget>((word) {
-                // and here
                 return TextFormField(
                   initialValue: word,
                   onChanged: (value) => formValues[key] = value,
