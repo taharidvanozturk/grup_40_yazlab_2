@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, prefer_const_constructors
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,8 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:grup_40_yazlab_2/firebase_options.dart';
 import 'package:flutter_scalable_ocr/flutter_scalable_ocr.dart';
-import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
-import 'package:vector_math/vector_math_64.dart' as vector;
 
 Future<List<String>> _hocalariGetir() async {
   var querySnapshot =
@@ -45,7 +43,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +60,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -79,7 +77,7 @@ class KameraEkrani extends StatelessWidget {
     // You can use the ScalableOCR widget and other camera-related code
     return Scaffold(
       appBar: AppBar(
-        title: Text('Kamera Ekranı'),
+        title: const Text('Kamera Ekranı'),
       ),
       body: Center(
         child: ScalableOCR(
@@ -104,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => KameraEkrani(),
+        builder: (context) => const KameraEkrani(),
       ),
     );
   }
@@ -186,7 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    ClassSchedulePage(sinifAdi: sinifAdi),
+                                    DersProgramiSayfasi(sinifAdi: sinifAdi),
                               ),
                             );
                           },
@@ -207,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               _kameraAc();
             },
-            child: Icon(Icons.camera_alt_sharp),
+            child: const Icon(Icons.camera_alt_sharp),
           ),
         ],
       ),
@@ -216,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class DersEklemeSayfasi extends StatefulWidget {
-  const DersEklemeSayfasi({Key? key}) : super(key: key);
+  const DersEklemeSayfasi({super.key});
 
   @override
   _DersEklemeSayfasiState createState() => _DersEklemeSayfasiState();
@@ -468,7 +466,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
                                 value: number,
                                 child: Text('$number'),
                               );
-                            }).toList(),
+                            }),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -522,7 +520,7 @@ class _DersEklemeSayfasiState extends State<DersEklemeSayfasi> {
 }
 
 class OgretmenEklemeSayfasi extends StatefulWidget {
-  const OgretmenEklemeSayfasi({Key? key}) : super(key: key);
+  const OgretmenEklemeSayfasi({super.key});
 
   @override
   OgretmenEklemeSayfasiState createState() => OgretmenEklemeSayfasiState();
@@ -637,10 +635,10 @@ class OgretmenEklemeSayfasiState extends State<OgretmenEklemeSayfasi> {
   }
 }
 
-class ClassSchedulePage extends StatelessWidget {
+class DersProgramiSayfasi extends StatelessWidget {
   final String sinifAdi;
 
-  const ClassSchedulePage({super.key, required this.sinifAdi});
+  const DersProgramiSayfasi({super.key, required this.sinifAdi});
 
   @override
   Widget build(BuildContext context) {
@@ -691,7 +689,7 @@ class ClassSchedulePage extends StatelessWidget {
 }
 
 class VeriDuzenlemeEkrani extends StatefulWidget {
-  const VeriDuzenlemeEkrani({Key? key}) : super(key: key);
+  const VeriDuzenlemeEkrani({super.key});
 
   @override
   _VeriDuzenlemeEkraniState createState() => _VeriDuzenlemeEkraniState();
@@ -703,12 +701,12 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
   @override
   void initState() {
     super.initState();
-    _loadLessonsData();
-    _loadTeachersData();
-    _loadClassesData();
+    _derslerVeriGoster();
+    _hocalarVeriGoster();
+    _siniflarVeriGoster();
   }
 
-  Future<void> _loadLessonsData() async {
+  Future<void> _derslerVeriGoster() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('lessons').get();
     setState(() {
@@ -727,7 +725,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     }
   }
 
-  Future<void> _loadTeachersData() async {
+  Future<void> _hocalarVeriGoster() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('teachers').get();
     setState(() {
@@ -746,7 +744,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     }
   }
 
-  Future<void> _loadClassesData() async {
+  Future<void> _siniflarVeriGoster() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('classes').get();
     setState(() {
@@ -768,7 +766,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     }
   }
 
-  Future<void> _loadDataFromCollection(String collectionName) async {
+  Future<void> _dbVeriCek(String collectionName) async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection(collectionName).get();
 
@@ -785,7 +783,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     });
   }
 
-  Future<void> _deleteDocument(List<Map<String, dynamic>> dataList) async {
+  Future<void> _dbVeriSil(List<Map<String, dynamic>> dataList) async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -813,7 +811,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
                     .delete();
 
                 // Veriyi başarıyla sildiyse, veriyi yeniden yükle
-                await _loadDataFromCollection(collectionName);
+                await _dbVeriCek(collectionName);
 
                 // Silme işlemi başarılı olduysa bilgilendirme göster
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -831,7 +829,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
     );
   }
 
-  Future<void> _editDocument(Map<String, dynamic> documentData) async {
+  Future<void> _dbVeriDuzenle(Map<String, dynamic> documentData) async {
     var existingData = documentData;
     var formValues = Map<String, dynamic>.from(existingData);
 
@@ -864,7 +862,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
         return Dialog(
           insetPadding: EdgeInsets.zero, // remove padding
           child: AlertDialog(
-            title: const Text('Edit Document'),
+            title: const Text('Veri Düzenleme'),
             content: SingleChildScrollView(
               // add this to enable scrolling when the content is too large
               child: Column(
@@ -874,13 +872,13 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text('Vazgeç'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, formValues);
                 },
-                child: const Text('Save'),
+                child: const Text('Kaydet'),
               ),
             ],
           ),
@@ -901,7 +899,7 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
       } else {
         // Handle the case where 'collectionName' or 'id' is null
         if (kDebugMode) {
-          print('collectionName or id is null');
+          print('collectionName yada id null');
         }
       }
       // Successfully updated message
@@ -914,11 +912,11 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
       // Reload the data
       if (documentData['collectionName'] != null) {
         // Reload the data
-        await _loadDataFromCollection(documentData['collectionName']);
+        await _dbVeriCek(documentData['collectionName']);
       } else {
         // Handle the case where 'collectionName' is null
         if (kDebugMode) {
-          print('collectionName is null');
+          print('collectionName null');
         }
       }
     }
@@ -938,16 +936,16 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: _loadLessonsData,
-                child: const Text('Load Lessons'),
+                onPressed: _derslerVeriGoster,
+                child: const Text('Dersleri Getir'),
               ),
               ElevatedButton(
-                onPressed: _loadTeachersData,
-                child: const Text('Load Teachers'),
+                onPressed: _hocalarVeriGoster,
+                child: const Text('Hocaları Getir'),
               ),
               ElevatedButton(
-                onPressed: _loadClassesData,
-                child: const Text('Load Classes'),
+                onPressed: _siniflarVeriGoster,
+                child: const Text('Sınıfları Getir'),
               ),
             ],
           ),
@@ -964,13 +962,13 @@ class _VeriDuzenlemeEkraniState extends State<VeriDuzenlemeEkrani> {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          _editDocument(_veriListesi[index]);
+                          _dbVeriDuzenle(_veriListesi[index]);
                         },
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          _deleteDocument([_veriListesi[index]]);
+                          _dbVeriSil([_veriListesi[index]]);
                         },
                       )
                     ],

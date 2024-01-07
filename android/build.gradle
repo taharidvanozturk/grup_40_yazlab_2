@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.7.10'
+    ext.gradle_version = '7.1.1' // Replace with the desired version of the Android Gradle plugin
     repositories {
         google()
         mavenCentral()
@@ -7,6 +8,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.android.tools.build:gradle:$gradle_version"
     }
 }
 
