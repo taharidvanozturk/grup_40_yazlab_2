@@ -15,7 +15,9 @@
     - Bilgisayar için:
         - Flutter SDK
         - Android SDK 
-1. Proje öncelikle 'git clone' komutu kullanılarak istenilen klasöre klonlanır.
+2. Proje öncelikle 'git clone' komutu kullanılarak istenilen klasöre klonlanır.
+3. VS Code'un sağ alt kısmından uygulamayı çalıştırmayı hedeflediğimiz ortam seçilir ardından terminal üzerinde 'flutter run' komutu ile ya da main.dart dosyası üzerinde sağ üst kısımdan "Start Debugging" tuşuna tıklanarak proje build edilir ve çalıştırılır.
+
 ## Uygulama Sayfaları
 
 - Bu bölümde uygulamada bulunan sayfalar tanıtılacaktır.
