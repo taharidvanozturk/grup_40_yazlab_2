@@ -12,7 +12,7 @@
 
 ### Ana Sayfa
 
-![Uygulama Ana Sayfasının Görünüşü](photos\anasayfa.jpg)
+![Uygulama Ana Sayfasının Görünüşü](photos/anasayfa.jpg)
 
 
 
